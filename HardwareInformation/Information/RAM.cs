@@ -76,16 +76,26 @@ namespace HardwareInformation.Information
 	    /// <summary>
 	    ///     The "name" of the memory module, like DIMM-A1 etc.
 	    /// </summary>
-	    public string Name { get; internal set; }
+	    public string DeviceLocator { get; internal set; }
 
 	    /// <summary>
 	    ///     The partnumber of the memory module, mostly the specifier that can be used to search for it on Google
 	    /// </summary>
-	    public string PartNumber { get; internal set; }
+	    public string Name { get; internal set; }
 
 	    /// <summary>
 	    ///     FormFactor of the module (DIMM vs SODIMM etc.)
 	    /// </summary>
 	    public FormFactors FormFactor { get; internal set; }
+
+        /// <summary>
+        ///     Bank label of the module
+        /// </summary>
+        public string BankLabel { get; set; }
+
+        /// <summary>
+        ///     Tag of the module
+        /// </summary>
+        public string Tag { get; set; }
     }
 }

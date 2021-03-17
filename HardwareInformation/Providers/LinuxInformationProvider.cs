@@ -339,10 +339,13 @@ namespace HardwareInformation.Providers
                     .Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
 
                 Disk disk = null;
+                int lastIndex = -1;
 
                 foreach (var line in lines)
                 {
-                    if (line.StartsWith("*-"))
+                    var trimLine = line.Trim();
+
+                    if (trimLine.StartsWith("*-"))
                     {
                         if (disk != null)
                         {
@@ -352,21 +355,31 @@ namespace HardwareInformation.Providers
                         disk = null;
                     }
 
-                    if (line.StartsWith("*-disk:"))
+                    if (trimLine.StartsWith("*-disk:"))
                     {
-                        disk = new Disk();
+                        if (!int.TryParse(trimLine.Replace("*-disk:", ""), out int index))
+                            index = lastIndex + 1;
+
+                        disk = new Disk { DriveIndex = index };
+
+                        lastIndex = index;
+
                         continue;
                     }
 
                     if (disk != null)
                     {
-                        if (line.StartsWith("product:"))
+                        if (trimLine.StartsWith("product:"))
                         {
-                            disk.Model = disk.Caption = line.Replace("product:", "").Trim();
+                            disk.Model = disk.Caption = trimLine.Replace("product:", "").Trim();
                         }
-                        else if (line.StartsWith("vendor:"))
+                        else if (trimLine.StartsWith("vendor:"))
                         {
-                            disk.Vendor = line.Replace("vendor:", "").Trim();
+                            disk.Vendor = trimLine.Replace("vendor:", "").Trim();
+                        }
+                        else if (trimLine.StartsWith("serial:"))
+                        {
+                            disk.SerialNumber = trimLine.Replace("serial:", "").Trim();
                         }
                     }
                 }

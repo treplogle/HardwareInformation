@@ -382,7 +382,7 @@ namespace HardwareInformation.Providers
 
         public override void GatherDiskInformation(ref MachineInformation information)
         {
-            using var mos = new ManagementObjectSearcher("select Model,Size,Caption from Win32_DiskDrive");
+            using var mos = new ManagementObjectSearcher("select Model,Size,Caption,DeviceID,Index,InterfaceType,SerialNumber from Win32_DiskDrive");
             var disks = new List<Disk>();
 
             foreach (var managementBaseObject in mos.Get())
@@ -391,7 +391,11 @@ namespace HardwareInformation.Providers
                 {
                     Model = managementBaseObject.Properties["Model"].Value.ToString(),
                     Capacity = ulong.Parse(managementBaseObject.Properties["Size"].Value.ToString()),
-                    Caption = managementBaseObject.Properties["Caption"].Value.ToString()
+                    Caption = managementBaseObject.Properties["Caption"].Value.ToString(),
+                    DeviceID = managementBaseObject.Properties["DeviceID"].Value.ToString(),
+                    DriveIndex = int.Parse(managementBaseObject.Properties["Index"].Value.ToString()),
+                    InterfaceType = managementBaseObject.Properties["InterfaceType"].Value.ToString(),
+                    SerialNumber = managementBaseObject.Properties["SerialNumber"].Value.ToString().Trim()
                 };
                 disk.CapacityHRF = Util.FormatBytes(disk.Capacity);
 
@@ -404,7 +408,7 @@ namespace HardwareInformation.Providers
         public override void GatherGpuInformation(ref MachineInformation information)
         {
             using var mos = new ManagementObjectSearcher(
-                "select AdapterCompatibility,Caption,Description,DriverDate,DriverVersion,Name,Status from Win32_VideoController");
+                "select AdapterCompatibility,Caption,Description,DriverDate,DriverVersion,Name,Status,DeviceID from Win32_VideoController");
             var gpus = new List<GPU>();
 
             foreach (var managementBaseObject in mos.Get())
@@ -417,7 +421,8 @@ namespace HardwareInformation.Providers
                     DriverVersion = managementBaseObject.Properties["DriverVersion"].Value.ToString(),
                     Description = managementBaseObject.Properties["Description"].Value.ToString(),
                     Name = managementBaseObject.Properties["Name"].Value.ToString(),
-                    Status = managementBaseObject.Properties["Status"].Value.ToString()
+                    Status = managementBaseObject.Properties["Status"].Value.ToString(),
+                    DeviceID = managementBaseObject.Properties["DeviceID"].Value.ToString()
                 };
 
                 gpus.Add(gpu);
@@ -447,7 +452,7 @@ namespace HardwareInformation.Providers
         public override void GatherMonitorInformation(ref MachineInformation information)
         {
             using var mos = new ManagementObjectSearcher("root\\wmi",
-                "select ManufacturerName,UserFriendlyName from WmiMonitorID");
+                "select ManufacturerName,UserFriendlyName,SerialNumberID from WmiMonitorID");
             var displays = new List<Display>();
 
             foreach (var managementBaseObject in mos.Get())
@@ -461,6 +466,9 @@ namespace HardwareInformation.Providers
                             .Select(u => char.ConvertFromUtf32(u)).Where(s => s != "\u0000").ToList()),
                         Name = string.Join("",
                             ((IEnumerable<ushort>) managementBaseObject.Properties["UserFriendlyName"].Value)
+                            .Select(u => char.ConvertFromUtf32(u)).Where(s => s != "\u0000").ToList()),
+                        SerialNumber = string.Join("",
+                            ((IEnumerable<ushort>)managementBaseObject.Properties["SerialNumberID"].Value)
                             .Select(u => char.ConvertFromUtf32(u)).Where(s => s != "\u0000").ToList())
                     };
 
@@ -578,7 +586,7 @@ namespace HardwareInformation.Providers
             if (win10)
             {
                 query =
-                    "select ConfiguredClockSpeed,Manufacturer,Capacity,DeviceLocator,PartNumber,FormFactor from Win32_PhysicalMemory";
+                    "select ConfiguredClockSpeed,Manufacturer,Capacity,DeviceLocator,PartNumber,FormFactor,BankLabel,Tag from Win32_PhysicalMemory";
             }
             else
             {
@@ -629,14 +637,14 @@ namespace HardwareInformation.Providers
 
                         case "DeviceLocator":
                         {
-                            ram.Name = propertyData.Value.ToString();
+                            ram.DeviceLocator = propertyData.Value.ToString();
 
                             break;
                         }
 
                         case "PartNumber":
                         {
-                            ram.PartNumber = propertyData.Value.ToString();
+                            ram.Name = propertyData.Value.ToString();
 
                             break;
                         }
@@ -645,6 +653,20 @@ namespace HardwareInformation.Providers
                         {
                             ram.FormFactor = (RAM.FormFactors) Enum.Parse(
                                 typeof(RAM.FormFactors), propertyData.Value.ToString());
+
+                            break;
+                        }
+
+                        case "BankLabel":
+                        {
+                            ram.BankLabel = propertyData.Value.ToString();
+
+                            break;
+                        }
+
+                        case "Tag":
+                        {
+                            ram.Tag = propertyData.Value.ToString();
 
                             break;
                         }

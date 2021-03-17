@@ -14,5 +14,10 @@
 	    ///     Name of the monitor
 	    /// </summary>
 	    public string Name { get; internal set; }
+
+        /// <summary>
+        ///     Serial number of the monitor
+        /// </summary>
+        public string SerialNumber { get; set; }
     }
 }
